@@ -59,9 +59,10 @@ void loop() {
     Serial.println("Trying to connect with OBD...");
     lcd.setCursor(0, 0);
     lcd.print("Connecting OBD...");
-    if(OBDHandle::connect(targetAddress.c_str())) {
+    
+    if(OBDHandle::connect(targetAddress.c_str()))
         status = CONNECTION_STATUS::CONNECTED;
-    }
+
     return;
   }
 
@@ -73,17 +74,15 @@ void loop() {
     lcd.print(" Wait ECU...   ");
     delay(200);
 
-    if(OBDHandle::checkECU()) {
-      ecu_state = ECU_STATUS::AWAKE;
-      Serial.println("ECU Started.");
-      lcd.setCursor(0, 1);
-      lcd.print(" ECU Started!");
-      delay(1000);
-      lcd.clear();
-    }
-    else {
+    if(!OBDHandle::checkECU()) 
       return;
-    }
+
+    ecu_state = ECU_STATUS::AWAKE;
+    Serial.println("ECU Started.");
+    lcd.setCursor(0, 1);
+    lcd.print(" ECU Started!");
+    delay(1000);
+    lcd.clear();
   }
 
   String rawRPM = OBDHandle::sendCommand("010C");
