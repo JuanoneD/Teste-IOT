@@ -12,26 +12,6 @@ String OBDHandle::lastResponse = "";
 bool OBDHandle::debugEnabled = false;
 HardwareSerial* OBDHandle::debugSerial = nullptr;
 
-void OBDHandle::setServiceUUID(const char* uuid) {
-    serviceUUID = BLEUUID(uuid);
-}
-
-void OBDHandle::setCharUUID_TX(const char* uuid) {
-    charUUID_TX = BLEUUID(uuid);
-}
-
-void OBDHandle::setCharUUID_RX(const char* uuid) {
-    charUUID_RX = BLEUUID(uuid);
-}
-
-void OBDHandle::enableDebug(bool enable) {
-    debugEnabled = enable;
-}
-
-void OBDHandle::setDebugSerial(HardwareSerial* serial) {
-    debugSerial = serial;
-}
-
 void OBDHandle::debugPrint(String message) {
     if (debugEnabled && debugSerial != nullptr) {
         debugSerial->println("[OBDHandle] " + message);
@@ -47,42 +27,38 @@ void OBDHandle::notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic
     for (int i = 0; i < length; i++) {
         lastResponse += (char)pData[i];
     }
+    
+    if(lastResponse.indexOf('>') != -1) {
+        MessageHandle::processAndShowMessage(lastResponse);
+        debugPrint("Message Receive: " + lastResponse);
+        lastResponse = "";
+    }
 }
 
-String OBDHandle::sendCommand(String command) {
+void OBDHandle::sendCommand(String command) {
     if(!command.endsWith("\r")) command += "\r";
     
     debugPrint("Sending: " + command);
 
     lastResponse = ""; 
     pCharTX->writeValue((uint8_t*)command.c_str(), command.length(), false);
-
-    unsigned long startWait = millis();
-    while(lastResponse == "" && (millis() - startWait < 800)) { 
-      if (lastResponse.indexOf('>') != -1) {
-        break;
-      }
-      delay(1);
-    }
-    
-    debugPrint("Response time: " + String(millis() - startWait) + "ms");
-    
-    String cleanRes = lastResponse;
-    lastResponse = "";
-    cleanRes.replace(">", "");
-    cleanRes.trim();
-    
-    debugPrint("Received: " + cleanRes);
-    
-    return cleanRes;
 }
 
 void OBDHandle::sendStarterCommand(){
     OBDHandle::sendCommand("ATZ");    // Reset the chip
     delay(1000);
     OBDHandle::sendCommand("ATE0");   // Echo Off
+    delay(1000);
     OBDHandle::sendCommand("ATH0");   // Headers Off
+    delay(1000);
     OBDHandle::sendCommand("ATSP1");  // FORD STREET Protocol
+    delay(1000);
+    OBDHandle::sendCommand("ATAT1");  // Adaptive Timing
+    delay(1000);
+    OBDHandle::sendCommand("ATL0");   // Linefeeds Off
+    delay(1000);
+    OBDHandle::sendCommand("ATST32"); // Set Timeout 50*4ms = 200ms
+    delay(1000);
 }
 
 bool OBDHandle::connect(const char* address) {
@@ -125,7 +101,14 @@ bool OBDHandle::connect(const char* address) {
 
 bool OBDHandle::checkECU() {
     debugPrint("Checking ECU status...");
-    String response = sendCommand("0100\r");
+    sendCommand("0100\r");
+
+    unsigned long startWait = millis();
+    String response = "";
+    while (lastResponse.indexOf("41 00 ") == -1 && (millis() - startWait < 1000)) {
+        response = lastResponse;
+    }
+
     if (response.indexOf("41 00") != -1) {
         debugPrint("ECU is ON");
         return true; // ECU ON
@@ -133,4 +116,24 @@ bool OBDHandle::checkECU() {
     debugPrint("ECU is OFF or not responding");
     delay(1000);
     return false; // ECU OFF
+}
+
+void OBDHandle::setServiceUUID(const char* uuid) {
+    serviceUUID = BLEUUID(uuid);
+}
+
+void OBDHandle::setCharUUID_TX(const char* uuid) {
+    charUUID_TX = BLEUUID(uuid);
+}
+
+void OBDHandle::setCharUUID_RX(const char* uuid) {
+    charUUID_RX = BLEUUID(uuid);
+}
+
+void OBDHandle::enableDebug(bool enable) {
+    debugEnabled = enable;
+}
+
+void OBDHandle::setDebugSerial(HardwareSerial* serial) {
+    debugSerial = serial;
 }
