@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <BLEDevice.h>
+#include <messagehandle.h>
 
 class OBDHandle {
 private:
@@ -29,8 +30,8 @@ static void setCharUUID_TX(const char* uuid);
 static void setCharUUID_RX(const char* uuid);
 static bool begin();
 static bool connect(const char* address);
-static String sendCommand(String command);
-static bool checkECU();
+static void sendCommand(String command);
+static void checkECU();
 static void enableDebug(bool enable);
 static void setDebugSerial(HardwareSerial* serial);
 

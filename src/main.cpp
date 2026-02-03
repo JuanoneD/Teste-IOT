@@ -29,6 +29,7 @@ ECU_STATUS ecu_state = ECU_STATUS::SLEEP;
 
 void setup() {
     Serial.begin(115200);
+    Wire.setClock(400000); // 400kHz I2C
     lcd.init();
     delay(1000);
     lcd.backlight();
@@ -39,8 +40,8 @@ void setup() {
     lcd.print("-System Started-");
  
     // Enable debug for OBDHandle
-    //OBDHandle::setDebugSerial(&Serial);
-    //OBDHandle::enableDebug(true);
+    OBDHandle::setDebugSerial(&Serial);
+    OBDHandle::enableDebug(true);
 
     OBDHandle::setServiceUUID(serviceUUID.c_str());
     OBDHandle::setCharUUID_TX(charUUID_TX.c_str());
@@ -51,6 +52,7 @@ void setup() {
     //MessageHandle::setDebugSerial(&Serial);
 
     MessageHandle::setLCD(&lcd);
+    MessageHandle::setECUState(&ecu_state);
 }
 
 void loop() {
@@ -61,8 +63,11 @@ void loop() {
     lcd.print("Connecting OBD...");
     
     if(OBDHandle::connect(targetAddress.c_str()))
-        status = CONNECTION_STATUS::CONNECTED;
-
+    {
+      status = CONNECTION_STATUS::CONNECTED;
+      lcd.clear();
+    }
+    
     return;
   }
 
@@ -72,32 +77,24 @@ void loop() {
     lcd.print("Connect with OBD");
     lcd.setCursor(0, 1);
     lcd.print(" Wait ECU...   ");
-    delay(200);
-
-    if(!OBDHandle::checkECU()) 
-      return;
-
-    ecu_state = ECU_STATUS::AWAKE;
-    Serial.println("ECU Started.");
+    while (ecu_state == ECU_STATUS::SLEEP) {
+      delay(500);
+      OBDHandle::checkECU();
+    
+    }
     lcd.setCursor(0, 1);
-    lcd.print(" ECU Started!");
+    lcd.print("   ECU Awake!   ");
     delay(1000);
     lcd.clear();
   }
 
-  String rawRPM = OBDHandle::sendCommand("010C");
-  bool valid = MessageHandle::processAndShowMessage(rawRPM);
-  messagesFromRPM++;
-
   if(messagesFromRPM >= 20) {
-      delay(200);
-      messagesFromRPM = 0;
-      String rawTemp = OBDHandle::sendCommand("0105");
-      valid = MessageHandle::processAndShowMessage(rawTemp);
+    messagesFromRPM = 0;
+    OBDHandle::sendCommand("0105"); // Request Engine Coolant Temperature
+  }else{
+    OBDHandle::sendCommand("010C"); // Request RPM
+    messagesFromRPM++;
   }
-  if(!valid)
-    ecu_state = ECU_STATUS::SLEEP;
-
-  delay(200); // Ciclo rápido de leitura
+  delay(300);
 }
 
