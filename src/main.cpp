@@ -65,9 +65,9 @@ void loop() {
     if(OBDHandle::connect(targetAddress.c_str()))
     {
       status = CONNECTION_STATUS::CONNECTED;
-      lcd.clear();
     }
     
+    lcd.clear();
     return;
   }
 
@@ -80,7 +80,6 @@ void loop() {
     while (ecu_state == ECU_STATUS::SLEEP) {
       delay(500);
       OBDHandle::checkECU();
-    
     }
     lcd.setCursor(0, 1);
     lcd.print("   ECU Awake!   ");
