@@ -43,6 +43,8 @@ PreferencesHandle::PreferencesHandle() {
     fuel = prefs.getFloat("fuel", 45.0);
     tankCapacity = prefs.getFloat("capacity", 45.0);
     consumptionFactor = prefs.getFloat("factor", 0.00000000815);
+    distanceTraveled = prefs.getFloat("distance", 0.0);
+    tripFuelUsed = prefs.getFloat("tripFuel", 0.0);
     prefs.end();
 }
 
@@ -51,5 +53,27 @@ void PreferencesHandle::savePreferences() {
     prefs.putFloat("fuel", fuel);
     prefs.putFloat("capacity", tankCapacity);
     prefs.putFloat("factor", consumptionFactor);
+    prefs.putFloat("distance", distanceTraveled);
+    prefs.putFloat("tripFuel", tripFuelUsed);
     prefs.end();
+}
+
+void PreferencesHandle::setDistanceTraveled(float distance) {
+    if(distance == this->distanceTraveled) return;
+    this->distanceTraveled = distance;
+    savePreferences();
+}
+
+float PreferencesHandle::getDistanceTraveled() {
+    return distanceTraveled;
+}
+
+float PreferencesHandle::getTripFuelUsed() {
+    return tripFuelUsed;
+}
+
+void PreferencesHandle::setTripFuelUsed(float fuel) {
+    if(fuel == this->tripFuelUsed) return;
+    this->tripFuelUsed = fuel;
+    savePreferences();
 }

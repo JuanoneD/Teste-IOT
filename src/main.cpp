@@ -67,8 +67,8 @@ void setup() {
     );
  
     // Enable debug for OBDHandle
-    OBDHandle::setDebugSerial(&Serial);
-    OBDHandle::enableDebug(true);
+    //OBDHandle::setDebugSerial(&Serial);
+    //OBDHandle::enableDebug(true);
 
     OBDHandle::setServiceUUID(serviceUUID.c_str());
     OBDHandle::setCharUUID_TX(charUUID_TX.c_str());
@@ -121,6 +121,8 @@ void loop() {
     OBDHandle::sendCommand("010C"); // Request RPM
     delay(200);
     OBDHandle::sendCommand("0104"); // Request Engine Load
+    delay(200);
+    OBDHandle::sendCommand("010D"); // Speed
   }
   messagesFromRPM++;
   delay(300);

@@ -5,6 +5,7 @@
 #define RPM_MUX 0x0C
 #define TEMP_MUX 0x05
 #define ENGINE_LOAD_MUX 0x04
+#define SPEED_MUX 0x0D
 
 #define PREFERENCE_NAMESPACE "OBD2_READER"
 

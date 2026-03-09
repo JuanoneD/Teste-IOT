@@ -13,6 +13,11 @@ public:
     void setTankCapacity(float capacity);
     float getConsumptionFactor();
     void setConsumptionFactor(float factor);
+    float getDistanceTraveled();
+    void setDistanceTraveled(float distance);
+    float getTripFuelUsed();
+    void setTripFuelUsed(float fuel);
+
 private:
     static PreferencesHandle *instance;
     PreferencesHandle();
@@ -21,6 +26,8 @@ private:
     float fuel;
     float tankCapacity;
     float consumptionFactor;
+    float distanceTraveled;
+    float tripFuelUsed;
     void savePreferences();
 };
 

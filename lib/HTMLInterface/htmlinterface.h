@@ -21,7 +21,8 @@ private:
     void handleRoot();
     void handleReset();
     void handleAdd10();
-    void handleSetFator();
+    void handleFactorCalibration();
+    void handleResetTrip();
 };
 
 #endif
