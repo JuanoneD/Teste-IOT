@@ -42,23 +42,33 @@ void OBDHandle::sendCommand(String command) {
 
     lastResponse = ""; 
     pCharTX->writeValue((uint8_t*)command.c_str(), command.length(), false);
+
+    unsigned long startTime = millis();
+    unsigned long timeout = 1000; 
+
+    if (command.startsWith("AT")) {
+        timeout = 3000; 
+    }
+    
+    while (lastResponse.indexOf('>') == -1) {
+        if (millis() - startTime > timeout) {
+            debugPrint("Command timeout after " + String(timeout) + "ms");
+            return;
+        }
+        delay(10);
+        yield(); 
+    }
+
+    debugPrint("Response received in " + String(millis() - startTime) + "ms");
 }
 
 void OBDHandle::sendStarterCommand(){
     OBDHandle::sendCommand("ATZ");    // Reset the chip
-    delay(1000);
     OBDHandle::sendCommand("ATE0");   // Echo Off
-    delay(1000);
     OBDHandle::sendCommand("ATH0");   // Headers Off
-    delay(1000);
     OBDHandle::sendCommand("ATSP1");  // FORD STREET Protocol
-    delay(1000);
     OBDHandle::sendCommand("ATAT1");  // Adaptive Timing
-    delay(1000);
     OBDHandle::sendCommand("ATL0");   // Linefeeds Off
-    delay(1000);
-    OBDHandle::sendCommand("ATST32"); // Set Timeout 50*4ms = 200ms
-    delay(1000);
 }
 
 bool OBDHandle::connect(const char* address) {
