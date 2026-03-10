@@ -11,6 +11,7 @@ BLEClient* OBDHandle::pClient = nullptr;
 String OBDHandle::lastResponse = "";
 bool OBDHandle::debugEnabled = false;
 HardwareSerial* OBDHandle::debugSerial = nullptr;
+bool OBDHandle::messageReceived = false;
 
 void OBDHandle::debugPrint(String message) {
     if (debugEnabled && debugSerial != nullptr) {
@@ -24,6 +25,11 @@ bool OBDHandle::begin() {
     return  true;
 }
 void OBDHandle::notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+    if(messageReceived == true) {
+        debugPrint("Warning: Previous message still being processed. New message may be ignored.");
+        return;
+    }
+
     for (int i = 0; i < length; i++) {
         lastResponse += (char)pData[i];
     }
@@ -31,6 +37,7 @@ void OBDHandle::notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic
     if(lastResponse.indexOf('>') != -1) {
         MessageHandle::processAndShowMessage(lastResponse);
         debugPrint("Message Received: " + lastResponse);
+        messageReceived = true;
         lastResponse = "";
     }
 }
@@ -41,6 +48,7 @@ void OBDHandle::sendCommand(String command) {
     debugPrint("Sending: " + command);
 
     lastResponse = ""; 
+    messageReceived = false;
     pCharTX->writeValue((uint8_t*)command.c_str(), command.length(), false);
 
     unsigned long startTime = millis();
@@ -50,7 +58,7 @@ void OBDHandle::sendCommand(String command) {
         timeout = 3000; 
     }
     
-    while (lastResponse.indexOf('>') == -1) {
+    while (messageReceived == false) {
         if (millis() - startTime > timeout) {
             debugPrint("Command timeout after " + String(timeout) + "ms");
             return;

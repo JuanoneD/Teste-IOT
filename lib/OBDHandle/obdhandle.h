@@ -18,6 +18,7 @@ static BLEClient* pClient;
 static String lastResponse;
 static bool debugEnabled;
 static HardwareSerial* debugSerial;
+static bool messageReceived;
 
 static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
 static void sendStarterCommand();

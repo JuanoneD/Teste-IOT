@@ -68,7 +68,7 @@ void setup() {
  
     // Enable debug for OBDHandle
     OBDHandle::setDebugSerial(&Serial);
-    OBDHandle::enableDebug(true);
+    //OBDHandle::enableDebug(true);
 
     OBDHandle::setServiceUUID(serviceUUID.c_str());
     OBDHandle::setCharUUID_TX(charUUID_TX.c_str());
