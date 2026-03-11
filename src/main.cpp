@@ -67,7 +67,7 @@ void setup() {
     );
  
     // Enable debug for OBDHandle
-    //OBDHandle::setDebugSerial(&Serial);
+    OBDHandle::setDebugSerial(&Serial);
     //OBDHandle::enableDebug(true);
 
     OBDHandle::setServiceUUID(serviceUUID.c_str());
@@ -76,7 +76,7 @@ void setup() {
     OBDHandle::begin();
     
     //MessageHandle::enableDebug(true);
-    //MessageHandle::setDebugSerial(&Serial);
+    MessageHandle::setDebugSerial(&Serial);
 
     MessageHandle::setLCD(&lcd);
     MessageHandle::setECUState(&ecu_state);
@@ -106,7 +106,6 @@ void loop() {
     lcd.setCursor(0, 1);
     lcd.print(" Wait ECU...   ");
     while (ecu_state == ECU_STATUS::SLEEP) {
-      delay(500);
       OBDHandle::checkECU();
     }
     lcd.setCursor(0, 1);
@@ -114,18 +113,22 @@ void loop() {
     delay(1000);
     lcd.clear();
   }
-  
-  if(messagesFromRPM >= 20) {
-    messagesFromRPM = 0;
-    OBDHandle::sendCommand("0105"); // Request Engine Coolant Temperature
-  }else{
-    OBDHandle::sendCommand("010C"); // Request RPM
-    delay(200);
-    OBDHandle::sendCommand("0104"); // Request Engine Load
-    delay(200);
-    OBDHandle::sendCommand("010D"); // Speed
-  }
-  messagesFromRPM++;
-  delay(300);
-}
 
+  if(messagesFromRPM % 4 == 0) {
+    OBDHandle::sendCommand("010C"); // RPM
+  } else if(messagesFromRPM % 4 == 1) {
+    OBDHandle::sendCommand("010D"); // Speed - mais frequente
+  } else if(messagesFromRPM % 4 == 2) {
+    OBDHandle::sendCommand("0104"); // Engine Load
+  } else {
+    OBDHandle::sendCommand("010D"); // Speed novamente
+  }
+
+  // Temperatura menos frequente
+  if(messagesFromRPM % 30 == 0) {
+    messagesFromRPM = 0;
+    OBDHandle::sendCommand("0105"); // Temperature
+  }
+
+  messagesFromRPM++;
+}
